@@ -8,6 +8,7 @@ services:
       MQ_QMGR_NAME: AUTORIZA
       MQ_APP_PASSWORD: passw0rd
       MQ_ADMIN_PASSWORD: admin123
+      MQ_CONSOLE_DEFAULT_CCDT_PORT: "1414"
     ports:
       - "1414:1414"
       - "9443:9443"
@@ -18,7 +19,7 @@ services:
       test: ["CMD-SHELL", "dspmq -o status -m AUTORIZA | grep -q RUNNING"]
       interval: 10s
       timeout: 5s
-      retries: 30
+      retries: 60
     restart: unless-stopped
 
   producer:
@@ -36,8 +37,7 @@ services:
       MQ_PASSWORD: passw0rd
       SEND_MODE: file
     depends_on:
-      ibmmq:
-        condition: service_healthy
+      - ibmmq
     restart: unless-stopped
     volumes:
       - ./data.json:/app/data.json:ro
@@ -56,8 +56,7 @@ services:
       MQ_USER: app
       MQ_PASSWORD: passw0rd
     depends_on:
-      ibmmq:
-        condition: service_healthy
+      - ibmmq
     restart: unless-stopped
     command: ["python", "mq_consumer.py"]
 
