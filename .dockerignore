@@ -1,0 +1,15 @@
+.git/
+.gitignore
+.DS_Store
+__pycache__/
+*.pyc
+
+# Evitar enviar datos persistentes y archivos pesados al contexto
+mqdata/
+
+# Ignorar todos los paquetes no usados del cliente MQ salvo los requeridos
+Client/*
+!Client/ibmmq-runtime_9.3.0.0_amd64.deb
+!Client/ibmmq-client_9.3.0.0_amd64.deb
+!Client/ibmmq-gskit_9.3.0.0_amd64.deb
+!Client/ibmmq-sdk_9.3.0.0_amd64.deb
