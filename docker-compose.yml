@@ -61,23 +61,7 @@ services:
     restart: unless-stopped
     command: ["python", "mq_consumer.py"]
 
-  php_consumer:
-    build:
-      context: .
-      dockerfile: Dockerfile.php
-    platform: linux/amd64
-    environment:
-      MQ_QMGR_NAME: AUTORIZA
-      MQ_HOST: ibmmq
-      MQ_PORT: "1414"
-      MQ_QUEUE: BOFTD_ENV
-      MQ_CHANNEL: DEV.APP.SVRCONN
-      MQ_USER: app
-      MQ_PASSWORD: passw0rd
-    depends_on:
-      ibmmq:
-        condition: service_healthy
-    restart: unless-stopped
+  
 
 volumes:
   mqdata:
