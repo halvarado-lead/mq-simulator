@@ -100,11 +100,14 @@ try:
             for lote in lotes:
                 # Randomizar todos los CELCUPID dentro del lote
                 _randomize_celcupid(lote)
+                # Randomizar id_lote a un entero de 6 dígitos (100000-999999)
+                if isinstance(lote, dict) and isinstance(lote.get("id_lote"), int):
+                    lote["id_lote"] = random.randint(100_000, 999_999)
                 payload = json.dumps(lote)
                 queue.put(payload.encode("utf-8"))
                 try:
                     celcupid = lote.get("CELCUPID")
-                    print(f"Enviado lote {lote['id_lote']} CELCUPID={celcupid}")
+                    print(f"Enviado lote id_lote={lote['id_lote']} CELCUPID={celcupid}")
                 except Exception:
                     print("Enviado lote (sin id_lote)")
                 time.sleep(1)
