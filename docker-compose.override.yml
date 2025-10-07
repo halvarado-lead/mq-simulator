@@ -1,0 +1,7 @@
+services:
+  producer:
+    volumes:
+      - ./mq_producer.py:/app/mq_producer.py:ro
+  consumer:
+    volumes:
+      - ./mq_consumer.py:/app/mq_consumer.py:ro

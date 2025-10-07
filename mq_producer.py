@@ -12,6 +12,7 @@ queue_name = os.getenv("MQ_QUEUE", "BOFTD_ENV")
 user = os.getenv("MQ_USER", "admin")
 password = os.getenv("MQ_PASSWORD", "admin123")
 send_mode = os.getenv("SEND_MODE", "documents").lower()  # 'file' | 'documents' | 'print'
+randomize_file_mode = os.getenv("RANDOMIZE_FILE_MODE", "true").lower() in ("1", "true", "yes", "y")
 
 # Modo "print": solo imprime un mensaje cada N segundos y termina aquí
 if send_mode == "print":
@@ -82,13 +83,43 @@ def _randomize_celcupid(obj):
 try:
     while True:
         if send_mode == "file":
-            # En modo 'file' se envía el archivo completo tal cual. Si también
-            # quieres randomizar CELCUPID aquí, habría que parsear y re-escribir
-            # el archivo; por ahora se mantiene el comportamiento original.
-            with open("data.json", "rb") as f:
-                content = f.read()
-            queue.put(content)
-            print(f"Enviado archivo data.json ({len(content)} bytes)")
+            # En modo 'file' ahora podemos (opcionalmente) randomizar antes de enviar.
+            with open("data.json", "r", encoding="utf-8") as f:
+                raw = f.read()
+            if not randomize_file_mode:
+                queue.put(raw.encode("utf-8"))
+                print(f"Enviado archivo original data.json ({len(raw)} bytes) (sin randomizar)")
+                time.sleep(1)
+                continue
+            try:
+                # Intentar parsear como un único JSON. Si falla, intentar múltiples docs.
+                try:
+                    data_obj = json.loads(raw)
+                    docs = [data_obj]
+                except json.JSONDecodeError:
+                    # Fallback: múltiples documentos concatenados
+                    from io import StringIO
+                    docs = list(iter_json_documents(StringIO(raw)))
+
+                # Randomizar cada documento
+                for d in docs:
+                    _randomize_celcupid(d)
+                    if isinstance(d, dict) and isinstance(d.get("id_lote"), int):
+                        d["id_lote"] = random.randint(100_000, 999_999)
+
+                # Si era un único documento, enviar ese; si varios, concatenar JSONs
+                if len(docs) == 1:
+                    payload = json.dumps(docs[0], ensure_ascii=False)
+                else:
+                    payload = "".join(json.dumps(d, ensure_ascii=False) for d in docs)
+                queue.put(payload.encode("utf-8"))
+                # Log básico (solo primer doc)
+                first = docs[0]
+                id_lote_log = first.get("id_lote") if isinstance(first, dict) else None
+                print(f"Enviado data.json transformado id_lote={id_lote_log} bytes={len(payload)}")
+            except Exception as e:
+                queue.put(raw.encode("utf-8"))
+                print(f"Enviado archivo original (error al transformar): {e}")
             time.sleep(1)
             continue
 
