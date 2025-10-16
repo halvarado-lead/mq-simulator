@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Config MQ</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
+    .container { max-width: 860px; margin: auto; }
+    .row { margin: .75rem 0; }
+    label { display:block; font-weight: 600; margin-bottom: .25rem; }
+    input { width: 100%; padding: .5rem .6rem; border: 1px solid #ccc; border-radius: 6px; }
+    .btn { background: #0d6efd; color: #fff; border: none; padding: .6rem 1rem; border-radius: 6px; cursor: pointer; }
+    .alert { padding: .8rem 1rem; border-radius: 6px; margin: 1rem 0; }
+    .alert.success { background: #efe; color: #060; border: 1px solid #bfb; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Configuración de IBM MQ</h1>
+    <p><a href="/">⬅ Volver</a> · <a href="/logs/">Logs</a></p>
+
+    {% if success %}
+      <div class="alert success">{{ success }}</div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="row">
+        <label>Queue Manager</label>
+        <input type="text" name="queue_manager" value="{{ queue_manager }}" />
+      </div>
+      <div class="row">
+        <label>Channel</label>
+        <input type="text" name="channel" value="{{ channel }}" />
+      </div>
+      <div class="row">
+        <label>Host</label>
+        <input type="text" name="host" value="{{ host }}" />
+      </div>
+      <div class="row">
+        <label>Port</label>
+        <input type="text" name="port" value="{{ port }}" />
+      </div>
+      <div class="row">
+        <label>Queue name</label>
+        <input type="text" name="queue_name" value="{{ queue_name }}" />
+      </div>
+      <div class="row">
+        <label>User</label>
+        <input type="text" name="user" value="{{ user }}" />
+      </div>
+      <div class="row">
+        <label>Password</label>
+        <input type="password" name="password" value="{{ password }}" />
+      </div>
+      <div class="row">
+        <button class="btn" type="submit">Guardar</button>
+      </div>
+    </form>
+  </div>
+</body>
+</html>

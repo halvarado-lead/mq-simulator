@@ -4,7 +4,7 @@ import pymqi
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.utils.encoding import force_str
-from .models import SentMessage
+from .models import SentMessage, MqConfig
 import base64
 
 
@@ -35,7 +35,7 @@ def basic_auth_required(view_func):
     return _wrapped
 
 
-def get_mq_config():
+def _defaults_from_env():
     return {
         'queue_manager': os.getenv('MQ_QMGR_NAME', 'AUTORIZA'),
         'channel': os.getenv('MQ_CHANNEL', 'SYSTEM.ADMIN.SVRCONN'),
@@ -45,6 +45,22 @@ def get_mq_config():
         'user': os.getenv('MQ_USER', 'admin'),
         'password': os.getenv('MQ_PASSWORD', 'admin123'),
     }
+
+
+def get_mq_config():
+    # Si hay un registro MqConfig, usarlo; si no, devolver defaults de env
+    cfg = MqConfig.objects.first()
+    if cfg:
+        return {
+            'queue_manager': cfg.queue_manager,
+            'channel': cfg.channel,
+            'host': cfg.host,
+            'port': cfg.port,
+            'queue_name': cfg.queue_name,
+            'user': cfg.user,
+            'password': cfg.password,
+        }
+    return _defaults_from_env()
 
 
 @basic_auth_required
@@ -102,3 +118,39 @@ def home(request):
 def logs(request):
     items = SentMessage.objects.order_by('-created_at')[:200]
     return render(request, 'logs.html', {'items': items})
+
+
+@basic_auth_required
+def config(request):
+    # Cargar o crear por defecto (en memoria para el form)
+    cfg = MqConfig.objects.first()
+    if request.method == 'POST':
+        data = {
+            'queue_manager': request.POST.get('queue_manager', '').strip() or 'AUTORIZA',
+            'channel': request.POST.get('channel', '').strip() or 'SYSTEM.ADMIN.SVRCONN',
+            'host': request.POST.get('host', '').strip() or 'ibmmq',
+            'port': request.POST.get('port', '').strip() or '1414',
+            'queue_name': request.POST.get('queue_name', '').strip() or 'BOFTD_ENV',
+            'user': request.POST.get('user', '').strip() or 'admin',
+            'password': request.POST.get('password', '').strip() or 'admin123',
+        }
+        if cfg is None:
+            cfg = MqConfig.objects.create(**data)
+        else:
+            for k, v in data.items():
+                setattr(cfg, k, v)
+            cfg.save()
+        return render(request, 'config.html', {**data, 'success': 'Configuración guardada.'})
+
+    # GET: si no hay registro, mostrar defaults de env
+    initial = cfg.__dict__ if cfg else _defaults_from_env()
+    ctx = {
+        'queue_manager': initial.get('queue_manager'),
+        'channel': initial.get('channel'),
+        'host': initial.get('host'),
+        'port': initial.get('port'),
+        'queue_name': initial.get('queue_name'),
+        'user': initial.get('user'),
+        'password': initial.get('password'),
+    }
+    return render(request, 'config.html', ctx)
