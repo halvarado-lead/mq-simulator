@@ -5,3 +5,6 @@ services:
   consumer:
     volumes:
       - ./mq_consumer.py:/app/mq_consumer.py:ro
+  web:
+    volumes:
+      - ./webapp:/app/webapp:ro

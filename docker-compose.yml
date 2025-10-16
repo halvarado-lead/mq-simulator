@@ -60,7 +60,52 @@ services:
     restart: unless-stopped
     command: ["python", "mq_consumer.py"]
 
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    environment:
+      MQ_QMGR_NAME: AUTORIZA
+      MQ_HOST: ibmmq
+      MQ_PORT: "1414"
+      MQ_QUEUE: BOFTD_ENV
+      MQ_CHANNEL: DEV.APP.SVRCONN
+      MQ_USER: app
+      MQ_PASSWORD: passw0rd
+      DJANGO_SETTINGS_MODULE: webapp.settings
+      DJANGO_SQLITE_PATH: /tmp/db.sqlite3
+      DB_ENGINE: mysql
+      DB_NAME: mqdb
+      DB_USER: mquser
+      DB_PASSWORD: mqpass
+      DB_HOST: mysql
+      DB_PORT: "3306"
+      BASIC_AUTH_USER: admin
+      BASIC_AUTH_PASS: admin1234
+    depends_on:
+      - ibmmq
+      - mysql
+    restart: unless-stopped
+    command: ["sh", "/app/webapp/entrypoint.sh"]
+    ports:
+      - "8000:8000"
+
+  mysql:
+    image: mysql:8.0
+    platform: linux/amd64
+    environment:
+      MYSQL_DATABASE: mqdb
+      MYSQL_USER: mquser
+      MYSQL_PASSWORD: mqpass
+      MYSQL_ROOT_PASSWORD: rootpass
+    command: ["--default-authentication-plugin=mysql_native_password", "--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci"]
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
   
 
 volumes:
   mqdata:
+  mysql_data:

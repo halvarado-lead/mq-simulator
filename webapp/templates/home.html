@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Enviar a MQ</title>
+  <style>
+    body { font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif; margin: 2rem; }
+    textarea { width: 100%; height: 220px; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; }
+    .container { max-width: 860px; margin: auto; }
+    .row { margin: 1rem 0; }
+    .btn { background: #0d6efd; color: #fff; border: none; padding: .6rem 1rem; border-radius: 6px; cursor: pointer; }
+    .alert { padding: .8rem 1rem; border-radius: 6px; margin: 1rem 0; }
+    .alert.error { background: #fee; color: #b00; border: 1px solid #fbb; }
+    .alert.success { background: #efe; color: #060; border: 1px solid #bfb; }
+    label { display:block; font-weight: 600; margin-bottom: .25rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Enviar mensaje a IBM MQ</h1>
+
+    {% if error %}
+      <div class="alert error">{{ error }}</div>
+    {% endif %}
+    {% if success %}
+      <div class="alert success">{{ success }}</div>
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+      <div class="row">
+        <label for="payload">Contenido del mensaje</label>
+        <textarea id="payload" name="payload" placeholder='Pegá aquí tu JSON o texto a enviar'>{{ payload|default:'' }}</textarea>
+      </div>
+      <div class="row">
+        <button class="btn" type="submit" name="action" value="preview">Previsualizar</button>
+        {% if show_confirm %}
+          <button class="btn" type="submit" name="action" value="send" style="background:#198754; margin-left: .5rem;">Confirmar envío</button>
+        {% endif %}
+      </div>
+    </form>
+
+    {% if preview %}
+      <h3>Vista previa (JSON formateado)</h3>
+      <pre style="background:#f6f8fa; padding:1rem; border-radius:6px; overflow:auto;">{{ preview }}</pre>
+    {% endif %}
+  </div>
+</body>
+</html>
